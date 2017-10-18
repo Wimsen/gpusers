@@ -1,0 +1,183 @@
+<html>
+
+<head>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='bootstrap.min.css') }}">
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.2.1/jq-3.2.1/dt-1.10.16/datatables.min.css" />
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.2.1/jq-3.2.1/dt-1.10.16/datatables.min.js"></script>
+
+</head>
+
+<body>
+  <center>
+    <h1>GPU resources on Telenor001</h1>
+  </center>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <center>
+          <h3>GPU utilization</h3>
+        </center>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>
+                Device
+              </th>
+              <th>
+                Usage
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in gpu_usage %}
+              <tr>
+                <td>
+                  {{loop.index - 1 }}
+                </td>
+                <td>
+                  {{d}}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-6">
+        <center>
+          <h3>Users in Massimiliano's group</h3>
+        </center>
+        <table class="table" id="massitable">
+          <thead>
+            <tr>
+              <th>
+                Username
+              </th>
+              <th>
+                GPU
+              </th>
+              <th>
+                Memory usage
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in massi_pids %}
+            <tr>
+              <td>
+                {{d["user"]}}
+              </td>
+
+              <td>
+                {{d["device"]}}
+              </td>
+
+              <td>
+                {{d["mem"]}}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col col-6">
+        <center>
+          <h3>Users in Keith's group</h3>
+        </center>
+
+        <table class="table" id="keithtable">
+          <thead>
+            <tr>
+              <th>
+                Username
+              </th>
+              <th>
+                GPU
+              </th>
+              <th>
+                Memory usage
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in keith_pids %}
+              <tr>
+                <td>
+                  {{d["user"]}}
+                </td>
+
+                <td>
+                  {{d["device"]}}
+                </td>
+
+                <td>
+                  {{d["mem"]}}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <center>
+          <h3>Other users </h3>
+        </center>
+
+        <table class="table" id="othertable">
+          <thead>
+            <tr>
+              <th>
+                Username
+              </th>
+              <th>
+                GPU
+              </th>
+              <th>
+                Memory usage
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in other_pids %}
+              <tr>
+                <td>
+                  {{d["user"]}}
+                </td>
+
+                <td>
+                  {{d["device"]}}
+                </td>
+
+                <td>
+                  {{d["mem"]}}
+                </td>
+              </tr>
+            {% endfor %}
+          </div>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let tableOptions = {
+      "paging": false,
+      "info": false,
+      "searching": false
+    };
+
+    $(document).ready(function() {
+      $('#massitable').DataTable(tableOptions);
+      $('#keithtable').DataTable(tableOptions);
+      $('#othertable').DataTable(tableOptions);
+    });
+  </script>
+</body>
+
+</html>
