@@ -5,7 +5,6 @@
   <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.2.1/jq-3.2.1/dt-1.10.16/datatables.min.css" />
   <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.2.1/jq-3.2.1/dt-1.10.16/datatables.min.js"></script>
-
 </head>
 
 <body>
@@ -18,27 +17,18 @@
         <center>
           <h3>GPU utilization</h3>
         </center>
-
         <table class="table">
           <thead>
             <tr>
-              <th>
-                Device
-              </th>
-              <th>
-                Usage
-              </th>
+              <th>Device</th>
+              <th>Usage</th>
             </tr>
           </thead>
           <tbody>
             {% for d in gpu_usage %}
               <tr>
-                <td>
-                  {{loop.index - 1 }}
-                </td>
-                <td>
-                  {{d}}
-                </td>
+                <td>{{loop.index - 1 }}</td>
+                <td>{{d}}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -46,76 +36,53 @@
       </div>
     </div>
     <div class="row">
-      <div class="col col-6">
+      <div class="col">
         <center>
           <h3>Users in Massimiliano's group</h3>
         </center>
         <table class="table" id="massitable">
           <thead>
             <tr>
-              <th>
-                Username
-              </th>
-              <th>
-                GPU
-              </th>
-              <th>
-                Memory usage
-              </th>
+              <th>Username</th>
+              <th>GPU</th>
+              <th>Memory usage</th>
+              <th>Runtime</th>
             </tr>
           </thead>
           <tbody>
-            {% for d in massi_pids %}
-            <tr>
-              <td>
-                {{d["user"]}}
-              </td>
-
-              <td>
-                {{d["device"]}}
-              </td>
-
-              <td>
-                {{d["mem"]}}
-              </td>
-            </tr>
+            {% for d in massi_data %}
+              <tr>
+                <td>{{d["user"]}}</td>
+                <td>{{d["device"]}}</td>
+                <td>{{d["mem"]}}</td>
+                <td>{{d["runtime"]}}</td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="col col-6">
+    </div>
+    <div class="row">
+      <div class="col">
         <center>
           <h3>Users in Keith's group</h3>
         </center>
-
         <table class="table" id="keithtable">
           <thead>
             <tr>
-              <th>
-                Username
-              </th>
-              <th>
-                GPU
-              </th>
-              <th>
-                Memory usage
-              </th>
+              <th>Username</th>
+              <th>GPU</th>
+              <th>Memory usage</th>
+              <th>Runtime</th>
             </tr>
           </thead>
           <tbody>
-            {% for d in keith_pids %}
+            {% for d in keith_data %}
               <tr>
-                <td>
-                  {{d["user"]}}
-                </td>
-
-                <td>
-                  {{d["device"]}}
-                </td>
-
-                <td>
-                  {{d["mem"]}}
-                </td>
+                <td>{{d["user"]}}</td>
+                <td>{{d["device"]}}</td>
+                <td>{{d["mem"]}}</td>
+                <td>{{d["runtime"]}}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -128,39 +95,25 @@
         <center>
           <h3>Other users </h3>
         </center>
-
         <table class="table" id="othertable">
           <thead>
             <tr>
-              <th>
-                Username
-              </th>
-              <th>
-                GPU
-              </th>
-              <th>
-                Memory usage
-              </th>
+              <th>Username</th>
+              <th>GPU</th>
+              <th>Memory usage</th>
+              <th>Runtime</th>
             </tr>
           </thead>
           <tbody>
-            {% for d in other_pids %}
+            {% for d in other_data %}
               <tr>
-                <td>
-                  {{d["user"]}}
-                </td>
-
-                <td>
-                  {{d["device"]}}
-                </td>
-
-                <td>
-                  {{d["mem"]}}
-                </td>
+                <td>{{d["user"]}}</td>
+                <td>{{d["device"]}}</td>
+                <td>{{d["mem"]}}</td>
+                <td>{{d["runtime"]}}</td>
               </tr>
             {% endfor %}
-          </div>
-        </tbody>
+          </tbody>
       </table>
     </div>
   </div>
