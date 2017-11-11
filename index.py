@@ -25,6 +25,9 @@ def index():
 def get_users():
     global massi_data, keith_data, other_data, gpu_usage
 
+    # Empty the usage table
+    gpu_usage = []
+
     nvidia_output = subprocess.check_output(['nvidia-smi']).decode('utf-8').split("\n")
     in_process_region = False
     data = []
