@@ -45,17 +45,29 @@ def get_and_calculate_usage_averages():
         dev_0_items = list(mongo.db.usage.find({"device": 0}))
         dev_1_items = list(mongo.db.usage.find({"device": 1}))
 
-        # For some reason the hours get changed 1 back - move it forward again
+        # For some reason the hours get changed 1 back - move it forward again.
+        # Also timedelta doesn't work with timezone datetimes. Remove it again.
+        # TODO: This is not very good
         for item in dev_0_items:
+            item['date'] = item['date'].replace(tzinfo=None)
             item['date'] = item['date'] + timedelta(hours=1)
 
         for item in dev_1_items:
+            item['date'] = item['date'].replace(tzinfo=None)
             item['date'] = item['date'] + timedelta(hours=1)
 
+        dev_0_lastday_items = [date for date in dev_0_items if date["date"] > (datetime.now() - timedelta(days=1))]
+        dev_1_lastday_items = [date for date in dev_1_items if date["date"] > (datetime.now() - timedelta(days=1))]
+
         df0 = pd.DataFrame(dev_0_items)
+        df0_lastday = pd.DataFrame(dev_0_lastday_items)
         df1 = pd.DataFrame(dev_1_items)
+        df1_lastday = pd.DataFrame(dev_1_lastday_items)
+
         df0.index = pd.to_datetime(df0.date)
+        df0_lastday.index = pd.to_datetime(df0_lastday.date)
         df1.index = pd.to_datetime(df1.date)
+        df1_lastday.index = pd.to_datetime(df1_lastday.date)
 
         df0_weekday_avg = df0.groupby(df0.index.weekday).mean().to_dict()
         df0_hour_avg = df0.groupby(df0.index.hour).mean().to_dict()
@@ -63,15 +75,11 @@ def get_and_calculate_usage_averages():
         df1_weekday_avg = df1.groupby(df1.index.weekday).mean().to_dict()
         df1_hour_avg = df1.groupby(df1.index.hour).mean().to_dict()
 
-        df0_lastday = df0[df0.last_valid_index() - pd.DateOffset(1, 'D'):]
-        df1_lastday = df1[df1.last_valid_index() - pd.DateOffset(1, 'D'):]
-
         df0_lastday_hour_avg = df0_lastday.groupby(df0_lastday.index.hour).mean().to_dict()
         df1_lastday_hour_avg = df1_lastday.groupby(df1_lastday.index.hour).mean().to_dict()
 
         # TODO change loop
         for i in range(24):
-            # Hack to move hours
             d0_hour_average[i] = df0_hour_avg["usage"][i] if i in dict.keys(
                 df0_hour_avg["usage"]) else "null"
             d0_lastday_hour_average[i] = df0_lastday_hour_avg["usage"][i] if i in dict.keys(
@@ -230,7 +238,7 @@ if __name__ == '__main__':
     sched.start()
     sched.add_job(get_users, 'interval', seconds=20)
     sched.add_job(save_usage, 'interval', seconds=60)
-    sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 10)
+    sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 20)
 
     app.run(host="0.0.0.0", port=5000)
 atexit.register(lambda: sched.shutdown(wait=False))
