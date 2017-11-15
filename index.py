@@ -69,14 +69,13 @@ def get_and_calculate_usage_averages():
         df1.index = pd.to_datetime(df1.date)
         df1_lastday.index = pd.to_datetime(df1_lastday.date)
 
-        df0_weekday_avg = df0.groupby(df0.index.weekday).mean().to_dict()
-        df0_hour_avg = df0.groupby(df0.index.hour).mean().to_dict()
+        df0_weekday_avg = df0.groupby(df0.index.weekday).mean().round(2).to_dict()
+        df0_hour_avg = df0.groupby(df0.index.hour).mean().round(2).to_dict()
+        df0_lastday_hour_avg = df0_lastday.groupby(df0_lastday.index.hour).mean().round(2).to_dict()
 
-        df1_weekday_avg = df1.groupby(df1.index.weekday).mean().to_dict()
-        df1_hour_avg = df1.groupby(df1.index.hour).mean().to_dict()
-
-        df0_lastday_hour_avg = df0_lastday.groupby(df0_lastday.index.hour).mean().to_dict()
-        df1_lastday_hour_avg = df1_lastday.groupby(df1_lastday.index.hour).mean().to_dict()
+        df1_weekday_avg = df1.groupby(df1.index.weekday).mean().round(2).to_dict()
+        df1_hour_avg = df1.groupby(df1.index.hour).mean().round(2).to_dict()
+        df1_lastday_hour_avg = df1_lastday.groupby(df1_lastday.index.hour).mean().round(2).to_dict()
 
         # TODO change loop
         for i in range(24):
