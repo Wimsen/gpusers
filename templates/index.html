@@ -23,13 +23,15 @@
             <tr>
               <th>Device</th>
               <th>Usage</th>
+              <th>Memory usage</th>
             </tr>
           </thead>
           <tbody>
             {% for d in statistics["gpu_usage"] %}
               <tr>
                 <td>{{loop.index - 1 }}</td>
-                <td>{{d}}</td>
+                <td>{{d["usage"]}}</td>
+                <td>{{d["memory"]}}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -39,21 +41,23 @@
     <div class="row">
       <div class="col">
         <center>
-          <h3>Users in Massimiliano's group</h3>
+          <h3>Processes</h3>
         </center>
         <table class="table" id="massitable">
           <thead>
             <tr>
               <th>Username</th>
+              <th>PID</th>
               <th>GPU</th>
               <th>Memory usage</th>
               <th>Runtime</th>
             </tr>
           </thead>
           <tbody>
-            {% for d in statistics["massi_data"] %}
+            {% for d in statistics["processes"] %}
               <tr>
                 <td>{{d["user"]}}</td>
+                <td>{{d["pid"]}}</td>
                 <td>{{d["device"]}}</td>
                 <td>{{d["mem"]}}</td>
                 <td>{{d["runtime"]}}</td>
@@ -63,62 +67,6 @@
         </table>
       </div>
     </div>
-    <div class="row">
-      <div class="col">
-        <center>
-          <h3>Users in Keith's group</h3>
-        </center>
-        <table class="table" id="keithtable">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>GPU</th>
-              <th>Memory usage</th>
-              <th>Runtime</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for d in statistics["keith_data"] %}
-              <tr>
-                <td>{{d["user"]}}</td>
-                <td>{{d["device"]}}</td>
-                <td>{{d["mem"]}}</td>
-                <td>{{d["runtime"]}}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <center>
-          <h3>Other users </h3>
-        </center>
-        <table class="table" id="othertable">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>GPU</th>
-              <th>Memory usage</th>
-              <th>Runtime</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for d in statistics["other_data"] %}
-              <tr>
-                <td>{{d["user"]}}</td>
-                <td>{{d["device"]}}</td>
-                <td>{{d["mem"]}}</td>
-                <td>{{d["runtime"]}}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-      </table>
-    </div>
-  </div>
-
   <div class="row">
     <div class="col">
       <canvas id="hourchart" ></canvas>
@@ -141,8 +89,6 @@
 
     $(document).ready(function() {
       $('#massitable').DataTable(tableOptions);
-      $('#keithtable').DataTable(tableOptions);
-      $('#othertable').DataTable(tableOptions);
     });
 
     var ctx = document.getElementById("hourchart").getContext('2d');

@@ -60,22 +60,26 @@ def get_and_calculate_usage_averages():
         dev_1_lastday_items = [date for date in dev_1_items if date["date"] > (datetime.now() - timedelta(days=1))]
 
         df0 = pd.DataFrame(dev_0_items)
-        df0_lastday = pd.DataFrame(dev_0_lastday_items)
         df1 = pd.DataFrame(dev_1_items)
-        df1_lastday = pd.DataFrame(dev_1_lastday_items)
+
+        df0_lastday_hour_avg = {"usage": {}}
+        df1_lastday_hour_avg = {"usage": {}}
+        if len(dev_0_lastday_items) > 0 and len(dev_1_lastday_items) > 0:
+            df0_lastday = pd.DataFrame(dev_0_lastday_items)
+            df1_lastday = pd.DataFrame(dev_1_lastday_items)
+            df0_lastday.index = pd.to_datetime(df0_lastday.date)
+            df1_lastday.index = pd.to_datetime(df1_lastday.date)
+            df0_lastday_hour_avg = df0_lastday.groupby(df0_lastday.index.hour).mean().round(2).to_dict()
+            df1_lastday_hour_avg = df1_lastday.groupby(df1_lastday.index.hour).mean().round(2).to_dict()
 
         df0.index = pd.to_datetime(df0.date)
-        df0_lastday.index = pd.to_datetime(df0_lastday.date)
         df1.index = pd.to_datetime(df1.date)
-        df1_lastday.index = pd.to_datetime(df1_lastday.date)
 
         df0_weekday_avg = df0.groupby(df0.index.weekday).mean().round(2).to_dict()
         df0_hour_avg = df0.groupby(df0.index.hour).mean().round(2).to_dict()
-        df0_lastday_hour_avg = df0_lastday.groupby(df0_lastday.index.hour).mean().round(2).to_dict()
 
         df1_weekday_avg = df1.groupby(df1.index.weekday).mean().round(2).to_dict()
         df1_hour_avg = df1.groupby(df1.index.hour).mean().round(2).to_dict()
-        df1_lastday_hour_avg = df1_lastday.groupby(df1_lastday.index.hour).mean().round(2).to_dict()
 
         # TODO change loop
         for i in range(24):
@@ -111,7 +115,7 @@ def get_users():
 
         nvidia_output = subprocess.check_output(['nvidia-smi']).decode('utf-8').split("\n")
         in_process_region = False
-        data = []
+        processes = []
 
         """
         Example of nvidia-smi output. We only want to process lines that are listed after
@@ -145,7 +149,12 @@ def get_users():
         for line in nvidia_output:
             if "%" in line and not in_process_region:
                 usage = [word for word in line.split() if "%" in word][0]
-                gpu_usage.append(usage)
+                memory = [word for word in line.split() if "MiB" in word]
+                gpu_usage.append({
+                    "usage": usage,
+                    "memory": "{} / {}".format(memory[0], memory[1])
+                })
+
 
             if not in_process_region:
                 if "Processes" in line:
@@ -155,8 +164,11 @@ def get_users():
                 numbers = [int(word) for word in line.split() if word.isdigit()]
                 mem = [word for word in line.split() if "MiB" in word]
                 if(len(numbers) >= 2):
-                    data.append({"device": str(numbers[0]), "pid": str(
-                        numbers[1]), "mem": str(mem[0])})
+                    processes.append({
+                        "device": str(numbers[0]),
+                        "pid": str(numbers[1]),
+                        "mem": str(mem[0])
+                        })
 
         ps_output = subprocess.check_output(['ps', 'aux']).decode('utf-8').split("\n")
 
@@ -164,7 +176,7 @@ def get_users():
         Exmple of one line in ps_output
         root     142509  0.0  0.0      0     0 ?        S    Oct31   0:01 [kworker/39:2]
         """
-        for d in data:
+        for d in processes:
             for s in ps_output:
                 if d["pid"] in s:
                     d["user"] = s.split()[0]
@@ -196,15 +208,8 @@ def get_users():
 
                     d["runtime"] = "{}h {}m {}s".format(hours, minutes, seconds)
 
-        massi_users = ["andrehk", "ankalmar", "borgarrl", "jorgewil", "ruoccoma",
-                       "bjorva", "eliezer", "erlenda", "havikbotn", "bjornhox", "krislerv"]
-        keith_users = ["keith"]
-
         statistics["gpu_usage"] = gpu_usage
-        statistics["massi_data"] = [u for u in data if u["user"] in massi_users]
-        statistics["keith_data"] = [u for u in data if u["user"] in keith_users]
-        statistics["other_data"] = [u for u in data if u["user"]
-                                    not in keith_users and u["user"] not in massi_users]
+        statistics["processes"] = processes
 
 
 def save_usage():
@@ -215,12 +220,13 @@ def save_usage():
 
         for device, usage in enumerate(statistics["gpu_usage"]):
             user_id = mongo.db.usage.insert_one(
-                {'date': now, "device": device, "usage": int(usage.strip("%"))})
+                {'date': now, "device": device, "usage": int(usage["usage"].strip("%"))})
 
 
 if __name__ == '__main__':
     get_users()
     get_and_calculate_usage_averages()
+    save_usage()
 
     executors = {
         'default': {'type': 'threadpool', 'max_workers': 20},
