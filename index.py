@@ -164,10 +164,12 @@ def get_users():
                 numbers = [int(word) for word in line.split() if word.isdigit()]
                 mem = [word for word in line.split() if "MiB" in word]
                 if(len(numbers) >= 2):
+                    mem_mb = int(mem[0].replace("MiB", ""))
+                    mem_gb = "{:.3f} GB".format(mem_mb / 1000)
                     processes.append({
                         "device": str(numbers[0]),
                         "pid": str(numbers[1]),
-                        "mem": str(mem[0])
+                        "mem": mem_gb
                         })
 
         ps_output = subprocess.check_output(['ps', 'aux']).decode('utf-8').split("\n")
@@ -179,9 +181,11 @@ def get_users():
         for d in processes:
             for s in ps_output:
                 if d["pid"] in s:
-                    d["user"] = s.split()[0]
+                    s = s.split()
+                    d["user"] = s[0]
+                    d["process_name"] = " ".join(s[10:])
 
-                    time_arr = s.split()[9].split(":")
+                    time_arr = s[9].split(":")
                     hours = 0
                     minutes = 0
                     seconds = 0

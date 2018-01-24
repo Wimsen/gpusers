@@ -1,11 +1,27 @@
 <html>
 
 <head>
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='bootstrap.min.css') }}">
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.2.1/jq-3.2.1/dt-1.10.16/datatables.min.css" />
-  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.2.1/jq-3.2.1/dt-1.10.16/datatables.min.js"></script>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+
+  <!-- Inline style because server can't do I/O after a while -->
+  <style>
+    th, td {
+      white-space: nowrap;
+    }
+
+    body {
+      margin-top: 50px;
+    }
+
+    .row {
+      margin-top: 50px;
+    }
+
+  </style>
 </head>
 
 <body>
@@ -51,6 +67,7 @@
               <th>GPU</th>
               <th>Memory usage</th>
               <th>Runtime</th>
+              <th>Process name</th>
             </tr>
           </thead>
           <tbody>
@@ -61,6 +78,7 @@
                 <td>{{d["device"]}}</td>
                 <td>{{d["mem"]}}</td>
                 <td>{{d["runtime"]}}</td>
+                <td>{{d["process_name"]}}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -84,7 +102,17 @@
     let tableOptions = {
       "paging": false,
       "info": false,
-      "searching": false
+      "searching": false,
+      "paging": false,
+      "scrollX": true,
+      "columns": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          { "width": "20%" }
+        ]
     };
 
     $(document).ready(function() {
