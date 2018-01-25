@@ -180,8 +180,9 @@ def get_users():
         """
         for d in processes:
             for s in ps_output:
-                if d["pid"] in s:
-                    s = s.split()
+                s = s.split()
+                if d["pid"] in s and int(d["pid"]) == int(s[1]):
+
                     d["user"] = s[0]
                     d["process_name"] = " ".join(s[10:])
 
