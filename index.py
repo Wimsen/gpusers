@@ -4,7 +4,9 @@ import os
 import time
 import atexit
 import pytz
+import psutil
 import pandas as pd
+from pprint import pprint
 
 from datetime import datetime, timedelta
 from flask_pymongo import PyMongo
@@ -22,7 +24,7 @@ app.config["MONGO_USERNAME"] = os.environ["DB_USER"]
 app.config["MONGO_PASSWORD"] = os.environ["DB_PASS"]
 app.config["SCHEDULER_API_ENABLED"] = True
 
-mongo = PyMongo(app)
+# mongo = PyMongo(app)
 statistics = {}
 
 
@@ -172,46 +174,21 @@ def get_users():
                         "mem": mem_gb
                         })
 
-        ps_output = subprocess.check_output(['ps', 'aux']).decode('utf-8').split("\n")
-
-        """
-        Exmple of one line in ps_output
-        root     142509  0.0  0.0      0     0 ?        S    Oct31   0:01 [kworker/39:2]
-        """
         for d in processes:
-            for s in ps_output:
-                s = s.split()
-                if d["pid"] in s and int(d["pid"]) == int(s[1]):
+            p = psutil.Process(int(d["pid"]))
+            d["process_name"] = " ".join(p.cmdline())
+            d["user"] = p.username()
 
-                    d["user"] = s[0]
-                    d["process_name"] = " ".join(s[10:])
+            created_datetime = datetime.fromtimestamp(p.create_time())
+            now = datetime.now()
+            td = now - created_datetime
+            hours, remainder = divmod(td.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
 
-                    time_arr = s[9].split(":")
-                    hours = 0
-                    minutes = 0
-                    seconds = 0
-                    if len(time_arr) == 3:
-                        hours += int(time_arr[0])
-                        hours += int(time_arr[1]) // 60
-
-                        minutes += int(time_arr[1]) % 60
-                        minutes += int(time_arr[2]) // 60
-
-                        seconds += int(time_arr[2]) % 60
-                    elif len(time_arr) == 2:
-                        hours += int(time_arr[0]) // 60
-
-                        minutes += int(time_arr[0]) % 60
-                        minutes += int(time_arr[1]) // 60
-
-                        seconds += int(time_arr[1]) % 60
-
-                    # Add leading zeroes to make it sortable
-                    hours = str(hours).zfill(2)
-                    minutes = str(minutes).zfill(2)
-                    seconds = str(seconds).zfill(2)
-
-                    d["runtime"] = "{}h {}m {}s".format(hours, minutes, seconds)
+            hours = str(hours).zfill(2)
+            minutes = str(minutes).zfill(2)
+            seconds = str(seconds).zfill(2)
+            d["runtime"] = "{}h {}m {}s".format(hours, minutes, seconds)
 
         statistics["gpu_usage"] = gpu_usage
         statistics["processes"] = processes
@@ -230,8 +207,8 @@ def save_usage():
 
 if __name__ == '__main__':
     get_users()
-    get_and_calculate_usage_averages()
-    save_usage()
+    # get_and_calculate_usage_averages()
+    # save_usage()
 
     executors = {
         'default': {'type': 'threadpool', 'max_workers': 20},
@@ -247,8 +224,8 @@ if __name__ == '__main__':
         executors=executors, job_defaults=job_defaults, timezone="EST", daemon=True)
     sched.start()
     sched.add_job(get_users, 'interval', seconds=20)
-    sched.add_job(save_usage, 'interval', seconds=60)
-    sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 20)
+    # sched.add_job(save_usage, 'interval', seconds=60)
+    # sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 20)
 
     app.run(host="0.0.0.0", port=5000)
 atexit.register(lambda: sched.shutdown(wait=False))
