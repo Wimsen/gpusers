@@ -10,23 +10,17 @@ from pprint import pprint
 
 from datetime import datetime, timedelta
 from flask_pymongo import PyMongo
+from pymongo import MongoClient
 from flask import Flask, render_template, g
 from apscheduler.executors.pool import ProcessPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
 app = Flask(__name__)
-app.config["MONGO_HOST"] = os.environ["DB_HOST"]
-app.config["MONGO_PORT"] = os.environ["DB_PORT"]
-app.config["MONGO_DBNAME"] = os.environ["DB_NAME"]
-app.config["MONGO_AUTH_SOURCE"] = os.environ["DB_AUTH_SOURCE"]
-app.config["MONGO_USERNAME"] = os.environ["DB_USER"]
-app.config["MONGO_PASSWORD"] = os.environ["DB_PASS"]
-app.config["SCHEDULER_API_ENABLED"] = True
+app.config["MONGO_URI"] = os.environ["MONGO_URI"]
 
-# mongo = PyMongo(app)
+mongo = PyMongo(app)
 statistics = {}
-
 
 @app.route("/")
 def index():
@@ -46,6 +40,8 @@ def get_and_calculate_usage_averages():
 
         dev_0_items = list(mongo.db.usage.find({"device": 0}))
         dev_1_items = list(mongo.db.usage.find({"device": 1}))
+        print(dev_0_items)
+
 
         # For some reason the hours get changed 1 back - move it forward again.
         # Also timedelta doesn't work with timezone datetimes. Remove it again.
@@ -207,8 +203,8 @@ def save_usage():
 
 if __name__ == '__main__':
     get_users()
-    # get_and_calculate_usage_averages()
-    # save_usage()
+    get_and_calculate_usage_averages()
+    save_usage()
 
     executors = {
         'default': {'type': 'threadpool', 'max_workers': 20},
@@ -224,8 +220,8 @@ if __name__ == '__main__':
         executors=executors, job_defaults=job_defaults, timezone="EST", daemon=True)
     sched.start()
     sched.add_job(get_users, 'interval', seconds=20)
-    # sched.add_job(save_usage, 'interval', seconds=60)
-    # sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 20)
+    sched.add_job(save_usage, 'interval', seconds=60)
+    sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 20)
 
     app.run(host="0.0.0.0", port=5000)
 atexit.register(lambda: sched.shutdown(wait=False))
