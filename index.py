@@ -9,6 +9,7 @@ import pandas as pd
 from pprint import pprint
 
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from flask_pymongo import PyMongo
 from pymongo import MongoClient
 from flask import Flask, render_template, g
@@ -40,8 +41,6 @@ def get_and_calculate_usage_averages():
 
         dev_0_items = list(mongo.db.usage.find({"device": 0}))
         dev_1_items = list(mongo.db.usage.find({"device": 1}))
-        print(dev_0_items)
-
 
         # For some reason the hours get changed 1 back - move it forward again.
         # Also timedelta doesn't work with timezone datetimes. Remove it again.
@@ -153,7 +152,6 @@ def get_users():
                     "memory": "{} / {}".format(memory[0], memory[1])
                 })
 
-
             if not in_process_region:
                 if "Processes" in line:
                     in_process_region = True
@@ -177,14 +175,11 @@ def get_users():
 
             created_datetime = datetime.fromtimestamp(p.create_time())
             now = datetime.now()
-            td = now - created_datetime
-            hours, remainder = divmod(td.seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-
-            hours = str(hours).zfill(2)
-            minutes = str(minutes).zfill(2)
-            seconds = str(seconds).zfill(2)
-            d["runtime"] = "{}h {}m {}s".format(hours, minutes, seconds)
+            diff = relativedelta(now, created_datetime)
+            days = str(diff.days).zfill(2)
+            hours = str(diff.hours).zfill(2)
+            minutes = str(diff.minutes).zfill(2)
+            d["runtime"] = "{}d {}h {}m".format(days, hours, minutes)
 
         statistics["gpu_usage"] = gpu_usage
         statistics["processes"] = processes
