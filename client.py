@@ -122,18 +122,16 @@ if __name__ == '__main__':
     get_users()
     save_usage()
 
-    executors = {
-        'default': {'type': 'threadpool', 'max_workers': 20},
-        'processpool': ProcessPoolExecutor(max_workers=5)
-    }
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(get_users, 'interval', seconds=20)
+    scheduler.add_job(save_usage, 'interval', seconds=60)
+    scheduler.start()
+    print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
-    job_defaults = {
-        'coalesce': False,
-        'max_instances': 3
-    }
-
-    sched = BackgroundScheduler(
-        executors=executors, job_defaults=job_defaults, timezone="EST", daemon=True)
-    sched.start()
-    sched.add_job(get_users, 'interval', seconds=20)
-    sched.add_job(save_usage, 'interval', seconds=60)
+    try:
+        # This is here to simulate application activity (which keeps the main thread alive).
+        while True:
+            time.sleep(5)
+    except (KeyboardInterrupt, SystemExit):
+        # Not strictly necessary if daemonic mode is enabled but should be done if possible
+        scheduler.shutdown()

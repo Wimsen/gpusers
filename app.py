@@ -38,7 +38,7 @@ def post_users():
     return "Success"
 
 
-@sched.scheduled_job('interval', minutes=1)
+@sched.scheduled_job('interval', minutes=10)
 def get_and_calculate_usage_averages():
     with app.app_context():
         global statistics
