@@ -21,7 +21,6 @@ mongo = PyMongo(app)
 statistics = {}
 sched = BackgroundScheduler()
 
-
 @app.route("/")
 def index():
     return render_template('index.html', statistics=statistics)
@@ -34,6 +33,8 @@ def post_users():
         content = request.get_json(silent=True)
         statistics["gpu_usage"] = content["gpu_usage"]
         statistics["processes"] = content["processes"]
+        statistics["last_udpated"] = datetime.now().strftime("%d/%m %H:%M")
+
     return "Success"
 
 
@@ -41,7 +42,6 @@ def post_users():
 def get_and_calculate_usage_averages():
     with app.app_context():
         global statistics
-        print("Get calc usage average")
         d0_hour_average = ["null" for i in range(24)]
         d0_lastday_hour_average = ["null" for i in range(24)]
         d0_weekday_average = ["null" for i in range(7)]
