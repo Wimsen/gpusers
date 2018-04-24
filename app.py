@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from flask_pymongo import PyMongo
 from pymongo import MongoClient
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, request
 from apscheduler.executors.pool import ProcessPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 
