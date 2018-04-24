@@ -37,6 +37,7 @@ def post_users():
         print(content)
         statistics["gpu_usage"] = content["gpu_usage"]
         statistics["processes"] = content["processes"]
+    return "Success"
 
 
 def get_and_calculate_usage_averages():
@@ -114,86 +115,6 @@ def get_and_calculate_usage_averages():
         statistics["d1_hour_average"] = d1_hour_average
         statistics["d1_lastday_hour_average"] = d1_lastday_hour_average
         statistics["d1_weekday_average"] = d1_weekday_average
-
-
-def get_users():
-    global statistics
-    with app.app_context():
-        gpu_usage = []
-
-        nvidia_output = subprocess.check_output(['nvidia-smi']).decode('utf-8').split("\n")
-        in_process_region = False
-        processes = []
-
-        """
-        Example of nvidia-smi output. We only want to process lines that are listed after
-        the "processes" line, therefore the "in_process_region" check.
-
-        +-----------------------------------------------------------------------------+
-        | NVIDIA-SMI 384.90                 Driver Version: 384.90                    |
-        |-------------------------------+----------------------+----------------------+
-        | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-        | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-        |===============================+======================+======================|
-        |   0  Tesla P100-PCIE...  Off  | 00000000:03:00.0 Off |                    0 |
-        | N/A   73C    P0   164W / 250W |   4514MiB / 16276MiB |     94%      Default |
-        +-------------------------------+----------------------+----------------------+
-        |   1  Tesla P100-PCIE...  Off  | 00000000:82:00.0 Off |                    0 |
-        | N/A   42C    P0    50W / 250W |   4666MiB / 16276MiB |     75%      Default |
-        +-------------------------------+----------------------+----------------------+
-
-        +-----------------------------------------------------------------------------+
-        | Processes:                                                       GPU Memory |
-        |  GPU       PID   Type   Process name                             Usage      |
-        |=============================================================================|
-        |    0    119559      C   python3                                     2333MiB |
-        |    0    119676      C   python3                                     2171MiB |
-        |    1    118261      C   python3                                     1253MiB |
-        |    1    120084      C   python                                       815MiB |
-        |    1    120583      C   python                                      1643MiB |
-        |    1    121084      C   python3                                      945MiB |
-        +-----------------------------------------------------------------------------+
-        """
-        for line in nvidia_output:
-            if "%" in line and not in_process_region:
-                usage = [word for word in line.split() if "%" in word][0]
-                memory = [word for word in line.split() if "MiB" in word]
-                gpu_usage.append({
-                    "usage": usage,
-                    "memory": "{} / {}".format(memory[0], memory[1])
-                })
-
-            if not in_process_region:
-                if "Processes" in line:
-                    in_process_region = True
-
-            if in_process_region:
-                numbers = [int(word) for word in line.split() if word.isdigit()]
-                mem = [word for word in line.split() if "MiB" in word]
-                if(len(numbers) >= 2):
-                    mem_mb = int(mem[0].replace("MiB", ""))
-                    mem_gb = "{:.3f} GB".format(mem_mb / 1000)
-                    processes.append({
-                        "device": str(numbers[0]),
-                        "pid": str(numbers[1]),
-                        "mem": mem_gb
-                        })
-
-        for d in processes:
-            p = psutil.Process(int(d["pid"]))
-            d["process_name"] = " ".join(p.cmdline())
-            d["user"] = p.username()
-
-            created_datetime = datetime.fromtimestamp(p.create_time())
-            now = datetime.now()
-            diff = relativedelta(now, created_datetime)
-            days = str(diff.days).zfill(2)
-            hours = str(diff.hours).zfill(2)
-            minutes = str(diff.minutes).zfill(2)
-            d["runtime"] = "{}d {}h {}m".format(days, hours, minutes)
-
-        statistics["gpu_usage"] = gpu_usage
-        statistics["processes"] = processes
 
 
 def save_usage():
