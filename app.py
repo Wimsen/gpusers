@@ -117,4 +117,3 @@ def get_and_calculate_usage_averages():
 
 
 sched.start()
-app.run(host="0.0.0.0", port=5000)
