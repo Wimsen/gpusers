@@ -226,4 +226,4 @@ if __name__ == '__main__':
     sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60 * 20)
 
     app.run(host="0.0.0.0", port=5000)
-atexit.register(lambda: sched.shutdown(wait=False))
+    atexit.register(lambda: sched.shutdown(wait=False))
