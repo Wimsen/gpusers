@@ -13,8 +13,10 @@ from dateutil.relativedelta import relativedelta
 from flask_pymongo import PyMongo
 from pymongo import MongoClient
 from flask import Flask, render_template, g, request
-from apscheduler.executors.pool import ProcessPoolExecutor
+
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+
 
 
 app = Flask(__name__)
@@ -129,19 +131,15 @@ def save_usage():
 if __name__ == '__main__':
     # get_and_calculate_usage_averages()
 
-    executors = {
-        'default': {'type': 'threadpool', 'max_workers': 20},
-        'processpool': ProcessPoolExecutor(max_workers=5)
-    }
-
-    job_defaults = {
-        'coalesce': False,
-        'max_instances': 3
-    }
-
-    sched = BackgroundScheduler(
-        executors=executors, job_defaults=job_defaults, timezone="EST", daemon=True)
-    sched.start()
-    sched.add_job(get_and_calculate_usage_averages, 'interval', seconds=60)
+    scheduler = BackgroundScheduler()
+    scheduler.start()
+    scheduler.add_job(
+        func=get_and_calculate_usage_averages,
+        trigger=IntervalTrigger(seconds=10),
+        id='get_calc_usage_averages',
+        name='Get and calculate usage averages',
+        replace_existing=True)
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())
 
     app.run(host="0.0.0.0", port=5000)
